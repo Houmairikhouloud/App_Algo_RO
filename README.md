@@ -27,8 +27,5 @@ L'application fonctionne de manière interactive en demandant à l'utilisateur l
 
 ## Installation :
 
-1. **Téléchargez l'application** depuis [Google Drive](https://drive.google.com/file/d/1EamLksMa7jCbdwqmvOn0242_PAxO_4aU/view?usp=drive_link).
-2. **Décompressez le fichier** et installez les dépendances nécessaires via `pip` :
-   ```bash
-   pip install -r requirements.txt
+ **Téléchargez l'application** depuis [Google Drive](https://drive.google.com/file/d/1EamLksMa7jCbdwqmvOn0242_PAxO_4aU/view?usp=drive_link).
 
