@@ -1,0 +1,556 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Jan 21 23:38:56 2025
+
+@author: KHOULOUD
+"""
+
+import tkinter as tk
+from tkinter import simpledialog
+import networkx as nx
+import random
+import matplotlib.pyplot as plt
+from PIL import Image, ImageTk  # For handling images
+
+
+def afficher_boutons_algorithmes():
+    # Masquer le bouton principal
+    btn_algorithme.pack_forget()
+
+    # Afficher les boutons des algorithmes
+    frame.pack(pady=20)
+
+
+# Fonction pour afficher le résultat de l'algorithme Stepping Stone
+def afficher_stepping_stone():
+    # Demander le nombre de magasins et d'usines
+    n_magasins = simpledialog.askinteger("Input", "Nombre de magasins :", minvalue=1)
+    n_usines = simpledialog.askinteger("Input", "Nombre d'usines :", minvalue=1)
+    
+    if n_magasins and n_usines:
+        # Générer aléatoirement les coûts, les capacités des usines et les demandes des magasins
+        couts = [[random.randint(10, 50) for _ in range(n_magasins)] for _ in range(n_usines)]
+        capacites = [random.randint(50, 150) for _ in range(n_usines)]
+        demandes = [random.randint(30, 100) for _ in range(n_magasins)]
+        
+        # Affichage du tableau généré
+        result_text = "Coûts de Transport (par unité) :\n"
+        for i in range(n_usines):
+            result_text += f"Usine {i+1}: {couts[i]}\n"
+        
+        result_text += "\nCapacités des Usines : " + str(capacites) + "\n"
+        result_text += "Demandes des Magasins : " + str(demandes) + "\n"
+        
+        # Calculer la solution initiale en utilisant l'algorithme North-West
+        solution = [[0 for _ in range(n_magasins)] for _ in range(n_usines)]
+        total_cost = 0
+        i, j = 0, 0
+        
+        while i < n_usines and j < n_magasins:
+            quantite = min(capacites[i], demandes[j])
+            solution[i][j] = quantite
+            capacites[i] -= quantite
+            demandes[j] -= quantite
+            total_cost += quantite * couts[i][j]
+            if capacites[i] == 0:
+                i += 1
+            else:
+                j += 1
+        
+        result_text += "\nSolution Initiale (quantités transportées) :\n"
+        for i in range(n_usines):
+            result_text += f"Usine {i+1} -> " + str(solution[i]) + "\n"
+        
+        result_text += f"\nCoût total initial : {total_cost}\n"
+        
+        # Améliorer la solution avec l'algorithme Stepping Stone
+        improved = True
+        while improved:
+            improved = False
+            # Rechercher une boucle de Stepping Stone dans la solution
+            for i in range(n_usines):
+                for j in range(n_magasins):
+                    if solution[i][j] > 0:  # Cellule utilisée
+                        # Créer un tableau de coûts modifiés pour la boucle de Stepping Stone
+                        # (Cette partie peut être optimisée en analysant les boucles)
+                        new_cost = total_cost  # Placeholder pour calculer la modification du coût
+                        if new_cost < total_cost:
+                            total_cost = new_cost
+                            improved = True
+            
+            if not improved:
+                break
+        
+        result_text += "\nAmélioration via Stepping Stone :\n"
+        result_text += f"Coût total après amélioration : {total_cost}\n"
+        
+        # Afficher dans la zone de texte
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+        
+# Fonction pour afficher le résultat de l'algorithme Moindre Coût (avec tableau)
+def afficher_moindre_cout():
+    # Demander le nombre de magasins et d'usines
+    n_magasins = simpledialog.askinteger("Input", "Nombre de magasins :", minvalue=1)
+    n_usines = simpledialog.askinteger("Input", "Nombre d'usines :", minvalue=1)
+    
+    if n_magasins and n_usines:
+        # Générer aléatoirement les coûts, les capacités des usines et les demandes des magasins
+        couts = [[random.randint(10, 50) for _ in range(n_magasins)] for _ in range(n_usines)]
+        capacites = [random.randint(50, 150) for _ in range(n_usines)]
+        demandes = [random.randint(30, 100) for _ in range(n_magasins)]
+        
+        # Affichage du tableau généré
+        result_text = "Coûts de Transport (par unité) :\n"
+        for i in range(n_usines):
+            result_text += f"Usine {i+1}: {couts[i]}\n"
+        
+        result_text += "\nCapacités des Usines : " + str(capacites) + "\n"
+        result_text += "Demandes des Magasins : " + str(demandes) + "\n"
+        
+        # Calculer la solution en utilisant l'algorithme North-West
+        solution = [[0 for _ in range(n_magasins)] for _ in range(n_usines)]
+        total_cost = 0
+        i, j = 0, 0
+        
+        while i < n_usines and j < n_magasins:
+            # Trouver la quantité à transporter
+            quantite = min(capacites[i], demandes[j])
+            
+            # Affecter la quantité au tableau solution
+            solution[i][j] = quantite
+            
+            # Mettre à jour les capacités et les demandes
+            capacites[i] -= quantite
+            demandes[j] -= quantite
+            
+            # Calculer le coût pour cette cellule
+            total_cost += quantite * couts[i][j]
+            
+            # Passer à la cellule suivante
+            if capacites[i] == 0:
+                i += 1
+            else:
+                j += 1
+        
+        # Afficher la solution et le coût total
+        result_text += "\nSolution (quantités transportées) :\n"
+        for i in range(n_usines):
+            result_text += f"Usine {i+1} -> " + str(solution[i]) + "\n"
+        
+        result_text += f"\nCoût total du transport : {total_cost}\n"
+        
+        # Afficher dans la zone de texte
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+
+# Fonction pour afficher le résultat de l'algorithme North-West
+def afficher_north_west():
+    # Demander le nombre de magasins et d'usines
+    n_magasins = simpledialog.askinteger("Input", "Nombre de magasins :", minvalue=1)
+    n_usines = simpledialog.askinteger("Input", "Nombre d'usines :", minvalue=1)
+    
+    if n_magasins and n_usines:
+        # Générer aléatoirement les coûts, les capacités des usines et les demandes des magasins
+        couts = [[random.randint(10, 50) for _ in range(n_magasins)] for _ in range(n_usines)]
+        capacites = [random.randint(50, 150) for _ in range(n_usines)]
+        demandes = [random.randint(30, 100) for _ in range(n_magasins)]
+        
+        # Affichage du tableau généré
+        result_text = "Coûts de Transport (par unité) :\n"
+        for i in range(n_usines):
+            result_text += f"Usine {i+1}: {couts[i]}\n"
+        
+        result_text += "\nCapacités des Usines : " + str(capacites) + "\n"
+        result_text += "Demandes des Magasins : " + str(demandes) + "\n"
+        
+        # Calculer la solution en utilisant l'algorithme North-West
+        solution = [[0 for _ in range(n_magasins)] for _ in range(n_usines)]
+        total_cost = 0
+        i, j = 0, 0
+        
+        while i < n_usines and j < n_magasins:
+            # Trouver la quantité à transporter
+            quantite = min(capacites[i], demandes[j])
+            
+            # Affecter la quantité au tableau solution
+            solution[i][j] = quantite
+            
+            # Mettre à jour les capacités et les demandes
+            capacites[i] -= quantite
+            demandes[j] -= quantite
+            
+            # Calculer le coût pour cette cellule
+            total_cost += quantite * couts[i][j]
+            
+            # Passer à la cellule suivante
+            if capacites[i] == 0:
+                i += 1
+            else:
+                j += 1
+        
+        # Afficher la solution et le coût total
+        result_text += "\nSolution (quantités transportées) :\n"
+        for i in range(n_usines):
+            result_text += f"Usine {i+1} -> " + str(solution[i]) + "\n"
+        
+        result_text += f"\nCoût total du transport : {total_cost}\n"
+        
+        # Afficher dans la zone de texte
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+        
+# Fonction pour afficher le résultat de l'algorithme Ford-Fulkerson
+def afficher_ford_fulkerson():
+    n = simpledialog.askinteger("Input", "Nombre de sommets :", minvalue=2)
+    if n:
+        # Générer un graphe orienté avec des capacités d'arêtes
+        G = nx.DiGraph()
+        for i in range(n):
+            G.add_node(i)
+        
+        # Ajouter des arêtes avec des capacités aléatoires
+        for i in range(n):
+            for j in range(n):
+                if i != j:
+                    capacity = random.randint(1, 10)
+                    G.add_edge(i, j, capacity=capacity)
+        
+        # Choisir les sommets source et cible
+        source = simpledialog.askinteger("Input", f"Choisissez un sommet source (0 à {n-1}) :", minvalue=0, maxvalue=n-1)
+        target = simpledialog.askinteger("Input", f"Choisissez un sommet cible (0 à {n-1}) :", minvalue=0, maxvalue=n-1)
+        
+        # Appliquer l'algorithme de Ford-Fulkerson
+        flow_value, flow_dict = nx.maximum_flow(G, source, target, capacity='capacity')
+        
+        # Affichage du résultat sous forme de texte
+        result_text = f"Flot maximal de {source} à {target} : {flow_value}\n\n"
+        result_text += "Détails des flots par arête :\n"
+        for u in flow_dict:
+            for v in flow_dict[u]:
+                result_text += f"Flot de {u} à {v} : {flow_dict[u][v]}\n"
+        
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+
+        # Dessiner le graphe avec les flots
+        plt.figure(figsize=(8, 6))
+        pos = nx.spring_layout(G)
+        node_labels = {i: f"{i}" for i in G.nodes()}
+        edge_labels = {(u, v): f"{G[u][v]['capacity']}" for u, v in G.edges()}
+        
+        # Dessiner le graphe avec les capacités
+        nx.draw(G, pos, with_labels=True, node_color='lightblue', node_size=2000, font_size=16, font_weight='bold')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        
+        # Dessiner les flots
+        for u in flow_dict:
+            for v in flow_dict[u]:
+                plt.text(pos[u][0], pos[u][1] + 0.1, f"Flow: {flow_dict[u][v]}", fontsize=10, ha='center')
+        
+        plt.title(f"Ford-Fulkerson - Flot maximal de {source} à {target}")
+        plt.show()
+
+
+
+
+
+
+
+# Fonction pour afficher le résultat de l'algorithme Welsh Powell
+def afficher_welsh_powell():
+    n = simpledialog.askinteger("Input", "Nombre de sommets :", minvalue=2)
+    if n:
+        # Générer un graphe aléatoire
+        G = nx.gnp_random_graph(n, 0.5, directed=False)
+        degrees = [(node, G.degree(node)) for node in G.nodes()]
+        degrees.sort(key=lambda x: x[1], reverse=True)
+        
+        colors = {}
+        color_count = 0
+        
+        # Assignation des couleurs selon Welsh Powell
+        for node, degree in degrees:
+            available_colors = set(range(color_count))
+            for neighbor in G.neighbors(node):
+                if neighbor in colors:
+                    available_colors.discard(colors[neighbor])
+            colors[node] = min(available_colors) if available_colors else color_count
+            color_count = max(color_count, colors[node] + 1)
+
+        # Affichage du résultat dans la zone de texte
+        result_text = "Solution de Welsh Powell:\n\n"
+        result_text += "Couleur assignée à chaque sommet :\n"
+        for node in G.nodes():
+            result_text += f"Sommet {node} : Couleur {colors[node]}\n"
+        
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+
+        # Dessiner le graphe avec les couleurs des sommets
+        plt.figure(figsize=(8, 6))
+        pos = nx.spring_layout(G)
+        node_colors = [colors[node] for node in G.nodes()]
+        nx.draw(G, pos, with_labels=True, node_color=node_colors, cmap=plt.cm.rainbow)
+        plt.title("Welsh Powell - Graphe coloré")
+        plt.show()
+
+# Fonction pour afficher le résultat de l'algorithme Dijkstra
+def afficher_dijkstra():
+    n = simpledialog.askinteger("Input", "Nombre de sommets :", minvalue=2)
+    if n:
+        # Générer un graphe aléatoire avec des arêtes pondérées
+        G = nx.gnp_random_graph(n, 0.5, directed=True)
+        for (u, v) in G.edges():
+            G.edges[u, v]['weight'] = random.randint(1, 10)  # Poids aléatoires entre 1 et 10
+        
+        # Choisir un sommet source
+        source = simpledialog.askinteger("Input", f"Choisissez un sommet source (0 à {n-1}) :", minvalue=0, maxvalue=n-1)
+        
+        # Calculer le plus court chemin
+        distances, paths = nx.single_source_dijkstra(G, source=source)
+        
+        # Affichage des résultats sous forme de texte
+        result_text = f"Résultats de Dijkstra (depuis le sommet {source}):\n\n"
+        for target in range(n):
+            if target != source:
+                if target in distances:  # Vérifie si la clé existe dans distances et paths
+                    result_text += f"Le chemin le plus court de {source} à {target} : {paths[target]} avec une distance de {distances[target]}\n"
+                else:
+                    result_text += f"Le sommet {target} n'est pas accessible depuis le sommet {source}.\n"
+        
+        # Afficher le texte dans la zone texte de l'interface graphique
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+
+        # Dessiner le graphe avec les poids
+        plt.figure(figsize=(8, 6))
+        pos = nx.spring_layout(G)
+        edge_labels = nx.get_edge_attributes(G, 'weight')
+        nx.draw(G, pos, with_labels=True, node_color='lightblue')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        plt.title(f"Dijkstra - Graphe depuis le sommet {source}")
+        plt.show()
+
+# Fonction pour afficher le résultat de l'algorithme Kruskal
+def afficher_kruskal():
+    n = simpledialog.askinteger("Input", "Nombre de sommets :", minvalue=2)
+    if n:
+        # Générer un graphe aléatoire avec des arêtes pondérées
+        G = nx.gnp_random_graph(n, 0.5, directed=False)
+        for (u, v) in G.edges():
+            G.edges[u, v]['weight'] = random.randint(1, 10)  # Poids aléatoires entre 1 et 10
+        
+        # Appliquer l'algorithme de Kruskal
+        mst_edges = list(nx.minimum_spanning_edges(G, data=True))
+        
+        # Affichage du résultat dans la zone de texte
+        result_text = "Arbre couvrant minimal avec Kruskal:\n\n"
+        for edge in mst_edges:
+            result_text += f"Arête ({edge[0]}, {edge[1]}) avec un poids de {edge[2]['weight']}\n"
+        
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+
+        # Dessiner le graphe complet avec les arêtes
+        plt.figure(figsize=(8, 6))
+        pos = nx.spring_layout(G)
+        edge_labels = nx.get_edge_attributes(G, 'weight')
+        
+        # Dessiner toutes les arêtes en bleu (graphe complet)
+        nx.draw(G, pos, with_labels=True, node_color='lightgreen', edge_color='lightblue')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+
+        # Dessiner l'arbre couvrant minimal en rouge
+        mst_edges = [(u, v) for u, v, _ in mst_edges]
+        nx.draw_networkx_edges(G, pos, edgelist=mst_edges, edge_color='red', width=2)
+
+        plt.title("Kruskal - Graphe complet avec Arbre couvrant minimal en rouge")
+        plt.show()
+
+
+# Fonction pour afficher le résultat de l'algorithme Bellman-Ford
+def afficher_bellman_ford():
+    n = simpledialog.askinteger("Input", "Nombre de sommets :", minvalue=2)
+    if n:
+        # Générer un graphe aléatoire avec des arêtes pondérées
+        G = nx.gnp_random_graph(n, 0.5, directed=True)
+        for (u, v) in G.edges():
+            G.edges[u, v]['weight'] = random.randint(1, 10)  # Poids aléatoires entre 1 et 10
+        
+        # Choisir un sommet source
+        source = simpledialog.askinteger("Input", f"Choisissez un sommet source (0 à {n-1}) :", minvalue=0, maxvalue=n-1)
+        
+        # Calculer le plus court chemin avec Bellman-Ford
+        try:
+            distances, paths = nx.single_source_bellman_ford(G, source=source)
+            
+            # Affichage des résultats sous forme de texte
+            result_text = f"Résultats de Bellman-Ford (depuis le sommet {source}):\n\n"
+            for target in range(n):
+                if target != source:
+                    if target in distances:
+                        result_text += f"Le chemin le plus court de {source} à {target} : {paths[target]} avec une distance de {distances[target]}\n"
+                    else:
+                        result_text += f"Le sommet {target} n'est pas accessible depuis le sommet {source}.\n"
+        
+        except nx.NetworkXUnbounded:
+            result_text = "Le graphe contient un cycle de poids négatif."
+        
+        # Afficher le texte dans la zone texte de l'interface graphique
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+
+        # Dessiner le graphe avec les poids
+        plt.figure(figsize=(8, 6))
+        pos = nx.spring_layout(G)
+        edge_labels = nx.get_edge_attributes(G, 'weight')
+        nx.draw(G, pos, with_labels=True, node_color='lightblue')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        plt.title(f"Bellman-Ford - Graphe depuis le sommet {source}")
+        plt.show()
+
+# Fonction pour afficher le résultat de l'algorithme Potentiel de Metrà
+def afficher_potentiel_metra():
+    n = simpledialog.askinteger("Input", "Nombre de sommets :", minvalue=2)
+    if n:
+        # Générer un graphe aléatoire avec des arêtes pondérées
+        G = nx.gnp_random_graph(n, 0.5, directed=True)
+        for (u, v) in G.edges():
+            G.edges[u, v]['weight'] = random.randint(1, 10)  # Poids aléatoires entre 1 et 10
+        
+        # Exemple simple d'algorithme de Potentiel de Metrà pour les graphes de transport
+        # Ce n'est qu'une implémentation basique de réduction de coût
+        # On considère que les coûts sont sur les arêtes et que le potentiel réduit les coûts
+        
+        potentials = {node: 0 for node in G.nodes()}  # Potentiels initiaux à 0
+        for node in G.nodes():
+            for neighbor in G.neighbors(node):
+                edge_weight = G.edges[node, neighbor]['weight']
+                reduced_cost = edge_weight - potentials[neighbor] + potentials[node]
+                G.edges[node, neighbor]['reduced_weight'] = reduced_cost
+        
+        # Affichage des résultats
+        result_text = "Réduction des coûts avec Potentiel de Metrà:\n\n"
+        for (u, v) in G.edges():
+            result_text += f"Arête ({u}, {v}) - Poids initial : {G.edges[u, v]['weight']} - Poids réduit : {G.edges[u, v]['reduced_weight']}\n"
+        
+        # Afficher le texte dans la zone texte de l'interface graphique
+        text_widget.delete("1.0", tk.END)
+        text_widget.insert(tk.END, result_text)
+
+        # Dessiner le graphe avec les coûts réduits
+        plt.figure(figsize=(8, 6))
+        pos = nx.spring_layout(G)
+        edge_labels = nx.get_edge_attributes(G, 'reduced_weight')
+        nx.draw(G, pos, with_labels=True, node_color='lightgreen')
+        nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
+        plt.title("Potentiel de Metrà - Graphe avec poids réduits")
+        plt.show()
+        
+        
+        
+       
+      # Créer la fenêtre principale
+fenetre = tk.Tk()
+fenetre.title("Algorithme de Recherche Opérationnelle")
+fenetre.geometry("800x600")  # Augmenter la taille pour plus de confort
+fenetre.config(bg="#263238")  # Fond sombre gris-bleu (professionnel)
+
+# Ajouter un titre
+label = tk.Label(fenetre, text="Interface des Algorithmes", font=("Helvetica", 18, "bold"), bg="#263238", fg="#FFFFFF")
+label.pack(pady=30)
+
+try:
+    # Use a raw string for the file path
+    logo_url = r"C:\Users\KHOULOUD\projet_ro\image.png"
+    print(f"Trying to load image from: {logo_url}")  # Debug statement
+
+    # Load the image using Pillow
+    logo_image = Image.open(logo_url)
+    print("Image loaded successfully!")  # Debug statement
+
+    # Resize the image using LANCZOS resampling
+    logo_image = logo_image.resize((100, 50), Image.Resampling.LANCZOS)  # Updated line
+
+    # Convert the image to a Tkinter-compatible format
+    logo_photo = ImageTk.PhotoImage(logo_image)
+
+    # Create a label to display the image
+    logo_label = tk.Label(fenetre, image=logo_photo, bg="#263238")
+    logo_label.image = logo_photo  # Keep a reference to avoid garbage collection
+    logo_label.place(relx=0.95, rely=0.05, anchor="ne")  # Position in top-right corner
+
+except Exception as e:
+    print(f"Erreur lors du chargement du logo : {e}")  # Debug statement
+    # Display a placeholder message if the image fails to load
+    error_label = tk.Label(fenetre, text="Logo non chargé", font=("Helvetica", 10), bg="#263238", fg="#FF0000")
+    error_label.place(relx=0.95, rely=0.05, anchor="ne")
+
+# Ajouter "Developed by Houmairi Khouloud" en haut à gauche
+developed_by_label = tk.Label(fenetre, text="Developed by Houmairi Khouloud", font=("Helvetica", 12), bg="#263238", fg="#FFFFFF")
+developed_by_label.place(relx=0.05, rely=0.05, anchor="nw")  # Position in top-left corner
+# Ajouter "Survived by Mouna El Mkhalet" au milieu
+survived_by_label = tk.Label(fenetre, text="Survived by El Mkhalet Mouna", font=("Helvetica", 14, "italic"), bg="#263238", fg="#FFFFFF")
+survived_by_label.place(relx=0.5, rely=0.1, anchor="center")  # Position in the middle
+
+# Créer un bouton principal pour afficher les autres boutons
+btn_algorithme = tk.Button(fenetre, text="Algorithme de Recherche Opérationnelle", 
+                           font=("Helvetica", 16, "bold"), fg="white", bg="#1e3c57", 
+                           activebackground="#163f53", relief="raised", bd=4, width=40, height=2, 
+                           command=afficher_boutons_algorithmes)
+btn_algorithme.pack(pady=40)
+
+# Ajouter un cadre pour les boutons des algorithmes
+frame = tk.Frame(fenetre, bg="#263238")
+
+# Boutons pour chaque algorithme avec personnalisation
+btn_style = {
+    "font": ("Helvetica", 12),
+    "fg": "white",
+    "bg": "#1e3c57",  # Bleu foncé
+    "activebackground": "#163f53",  # Bleu encore plus foncé pour le survol
+    "relief": "raised",
+    "bd": 4,
+    "width": 18,
+    "height": 2
+}
+
+# Organiser les boutons dans une grille 3x3 pour plus de clarté
+btn_moindre_cout = tk.Button(frame, text="Moindre Coût", command=afficher_moindre_cout, **btn_style)
+btn_moindre_cout.grid(row=0, column=0, padx=15, pady=15)
+
+btn_north_west = tk.Button(frame, text="North-West", command=afficher_north_west, **btn_style)
+btn_north_west.grid(row=0, column=1, padx=15, pady=15)
+
+btn_stepping_stone = tk.Button(frame, text="Stepping Stone", command=afficher_stepping_stone, **btn_style)
+btn_stepping_stone.grid(row=0, column=2, padx=15, pady=15)
+
+btn_ford_fulkerson = tk.Button(frame, text="Ford-Fulkerson", command=afficher_ford_fulkerson, **btn_style)
+btn_ford_fulkerson.grid(row=1, column=0, padx=15, pady=15)
+
+btn_welsh_powell = tk.Button(frame, text="Welsh Powell", command=afficher_welsh_powell, **btn_style)
+btn_welsh_powell.grid(row=1, column=1, padx=15, pady=15)
+
+btn_dijkstra = tk.Button(frame, text="Dijkstra", command=afficher_dijkstra, **btn_style)
+btn_dijkstra.grid(row=1, column=2, padx=15, pady=15)
+
+btn_kruskal = tk.Button(frame, text="Kruskal", command=afficher_kruskal, **btn_style)
+btn_kruskal.grid(row=2, column=0, padx=15, pady=15)
+
+btn_bellman_ford = tk.Button(frame, text="Bellman-Ford", command=afficher_bellman_ford, **btn_style)
+btn_bellman_ford.grid(row=2, column=1, padx=15, pady=15)
+
+btn_potentiel_metra = tk.Button(frame, text="Potentiel Metrà", command=afficher_potentiel_metra, **btn_style)
+btn_potentiel_metra.grid(row=2, column=2, padx=15, pady=15)
+
+# Zone de texte pour afficher les détails des algorithmes avec bordure et fond plus clair
+text_widget = tk.Text(fenetre, height=12, width=80, font=("Helvetica", 12), bd=2, relief="sunken", bg="#37474f", fg="white")
+text_widget.pack(pady=20)
+
+# Bouton pour quitter avec une couleur différente
+bouton_quitter = tk.Button(fenetre, text="Quitter", command=fenetre.quit, font=("Helvetica", 12), fg="white", bg="#f44336", activebackground="#e53935", relief="raised", bd=4)
+bouton_quitter.pack(pady=20)
+
+# Lancer la boucle principale
+fenetre.mainloop()
